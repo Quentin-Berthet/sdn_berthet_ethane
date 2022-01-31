@@ -1,0 +1,15 @@
+auto lo
+iface lo inet loopback
+
+auto eth0
+allow-hotplug eth0
+iface eth0 inet dhcp
+
+auto eth{{ idx+1 }}
+iface eth{{ idx+1 }} inet static
+        address {{ ip }}
+
+        {% for route in routes %}
+        up ip route add {{ route }} via {{ gateways[idx] }}
+        down ip route del {{ route }} via {{ gateways[idx] }}
+        {% endfor %}

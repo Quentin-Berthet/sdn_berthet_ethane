@@ -1,0 +1,13 @@
+- name: Wipe Servers Configurations
+  hosts: servers
+  remote_user: cumulus
+  become: yes
+  roles:
+    - reset_servers
+
+- name: Wipe Routers Configuration
+  hosts: routers
+  remote_user: cumulus
+  become: yes
+  roles:
+  - reset_routers

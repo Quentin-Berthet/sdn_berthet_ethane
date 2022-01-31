@@ -1,0 +1,41 @@
+---
+- name: PlaybookA - Routers
+  hosts: routers
+  remote_user: cumulus
+
+  tasks:
+    - name: Reset ZTP
+      become: yes
+      become_method: sudo
+      async: 1
+      poll: 0
+      shell: ztp -e && reboot
+
+    - name: Wait for the reboot to complete
+      wait_for_connection:
+        connect_timeout: 20
+        sleep: 5
+        delay: 5
+        timeout: 400
+
+    - name: Copy etc hosts file
+      become: yes
+      become_method: sudo
+      copy:
+        src: etc/hosts
+        dest: /etc/hosts
+
+    - name: Ping other routers
+      ping:
+
+- name: PlaybookA - Servers
+  hosts: servers
+  remote_user: cumulus
+
+  tasks:
+    - name: copy etc hosts file
+      become: yes
+      become_method: sudo
+      copy:
+        src: etc/hosts
+        dest: /etc/hosts

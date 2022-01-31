@@ -1,0 +1,18 @@
+graph vx {
+    R1;
+    R2;
+    R3;
+
+    server01;
+    server02;
+    server03;
+
+    R1:swp1 -- server01:eth1;
+    R1:swp2 -- R3:swp3;
+    R1:swp3 -- R2:swp3;
+
+    R2:swp1 -- server02:eth1;
+    R2:swp2 -- R3:swp2;
+
+    R3:swp1 -- server03:eth1;
+}

@@ -1,0 +1,27 @@
+- name: Copy the Default Interface Configuration in Place
+  copy:
+    dest: /etc/network/interfaces
+    content: |
+      # The loopback network interface
+      auto lo
+      iface lo inet loopback
+
+      # The primary network interface
+      auto eth0
+      iface eth0 inet dhcp
+  tags:
+    - wipe
+
+- name: Reboot server
+  become: yes
+  become_method: sudo
+  async: 1
+  poll: 0
+  shell: reboot
+
+- name: Wait for the reboot to complete
+  wait_for_connection:
+    connect_timeout: 20
+    sleep: 5
+    delay: 5
+    timeout: 250

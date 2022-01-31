@@ -1,0 +1,49 @@
+---
+- name: PlaybookD - Routers
+  hosts: routers
+  remote_user: cumulus
+  tasks:
+    - name: Add VLANs
+      nclu:
+        commands:
+          - add bridge bridge ports swp1-3
+          - add bridge bridge vids 102,203
+          - add bridge bridge pvid 1
+          - add interface swp1 bridge access {{ vlan }}
+        commit: true
+
+- name: PlaybookD - R1
+  hosts: R1
+  tasks:
+    - name: Add IPs
+      nclu:
+        commands:
+          - add vlan 102 ip address 192.168.0.1/29
+          - add vlan 203 ip address 192.168.0.9/29
+        commit: true
+
+- name: PlaybookD - Servers
+  hosts: servers
+  remote_user: cumulus
+  tasks:
+    - name: Create interface
+      become: yes
+      become_method: sudo
+      template:
+        src: etc/network/interfacesD
+        dest: /etc/network/interfaces
+      loop: "{{vips}}"
+      loop_control:
+        loop_var: ip
+        index_var: idx
+    - name: Restart NM
+      become: true
+      become_method: sudo
+      systemd:
+        state: restarted
+        name: networking
+    - name: Ping
+      shell: ping -c 3 {{ item[:-3] }}
+      register: ping_output
+      failed_when: ('100% packet loss' in ping_output.stdout)
+      with_items: "{{ vips }}"

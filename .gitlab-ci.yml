@@ -1,0 +1,20 @@
+before_script:
+  - cd labo2
+
+stages:
+  - playbookC
+  - playbookD
+
+playbookC:
+  stage: playbookC
+  script:
+    - ansible-playbook clean.yaml
+    - ansible-playbook playbookA.yaml
+    - ansible-playbook playbookB.yaml
+    - ansible-playbook playbookC.yaml
+
+playbookD:
+  stage: playbookD
+  script:
+    - ansible-playbook clean.yaml
+    - ansible-playbook playbookD.yaml

@@ -1,0 +1,54 @@
+---
+- name: PlaybookC - Routers
+  hosts: routers
+  remote_user: cumulus
+  tasks:
+    - name: Add IPs to routers
+      nclu:
+        commands:
+          - add interface swp{{ idx+1 }} ip address {{ ip }}
+        commit: true
+      loop: "{{ips}}"
+      loop_control:
+        loop_var: ip
+        index_var: idx
+    - name: Add routes
+      nclu:
+        commands:
+          - add routing route {{ route }}
+        commit: true
+      loop: "{{routes}}"
+      loop_control:
+        loop_var: route
+        index_var: idx
+
+- name: PlaybookC - Servers
+  hosts: servers
+  remote_user: cumulus
+  tasks:
+    - name: Create interface
+      become: yes
+      become_method: sudo
+      template:
+        src: etc/network/interfacesC
+        dest: /etc/network/interfaces
+      loop: "{{ips}}"
+      loop_control:
+        loop_var: ip
+        index_var: idx
+    - name: Restart NM
+      become: true
+      become_method: sudo
+      systemd:
+        state: restarted
+        name: networking
+
+- name: PlaybookC - Servers Ping
+  hosts: servers
+  remote_user: cumulus
+  tasks:
+    - name: Ping
+      shell: ping -c 3 {{ item[:-3] }}
+      register: ping_output
+      failed_when: ('100% packet loss' in ping_output.stdout)
+      with_items: "{{ ips }}"

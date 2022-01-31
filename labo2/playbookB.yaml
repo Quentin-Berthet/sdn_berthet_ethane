@@ -1,0 +1,49 @@
+---
+- name: PlaybookB - Servers
+  hosts: servers
+  remote_user: cumulus
+  tasks:
+    - name: Create interface
+      become: yes
+      become_method: sudo
+      copy:
+        src: etc/network/interfacesB
+        dest: /etc/network/interfaces
+    - name: Restart NM
+      become: true
+      become_method: sudo
+      systemd:
+        state: restarted
+        name: networking
+
+- name: PlaybookB - Routers
+  hosts: routers
+  remote_user: cumulus
+
+  tasks:
+    - name: Add interfaces
+      nclu:
+        commands:
+          - add interface swp1
+          - add interface swp2
+          - add interface swp3
+        commit: true
+
+    - name: Copy topology file
+      become: yes
+      become_method: sudo
+      copy:
+        src: etc/ptm.d/topology.dot
+        dest: /etc/ptm.d/topology.dot
+
+    - name: Restart ptmd service
+      become: yes
+      become_method: sudo
+      service:
+        name: ptmd
+        state: restarted
+
+    - name: Test PTM
+      shell: ptmctl
+      register: ptm_output
+      failed_when: ('pass' not in ptm_output.stdout)
